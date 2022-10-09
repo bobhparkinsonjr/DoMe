@@ -4,7 +4,7 @@ Track todo items.  Each item has a name, description, creation date, and complet
 
 Features:
 * Written in Flutter.
-* This project uses Firebase to store projects (includes auth, storage, and their no-SQL database).
+* This project uses Firebase to store projects (includes auth, storage, and no-SQL db).
 * Each project has its own list of todo items.
 * Projects can be shared with other users.
 * Each user can choose their own avatar image and custom background image.
