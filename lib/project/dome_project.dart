@@ -64,12 +64,23 @@ class DomeProject extends ChangeNotifier {
   }
 
   DomeProject.data({required Map<String, dynamic> data, String serverId = ''}) {
-    _name = data['projectName'];
-    _owner = data['owner'];
-    _type = DomeProjectType.values.firstWhere((e) => e.name == data['projectType']);
-    _graphicPath = data['projectGraphicPath'];
-    _projectPasswordCheck = data['projectPasswordCheck'];
-    _createDateTimeUTC = DateTime.parse(data['createDateTimeUTC']);
+    _name = data['projectName'] ?? '';
+    _owner = data['owner'] ?? '';
+
+    String projectTypeName = data['projectType'] ?? '';
+    if (projectTypeName.isNotEmpty)
+      _type = DomeProjectType.values.firstWhere((e) => e.name == projectTypeName);
+    else
+      _type = DomeProjectType.none;
+
+    _graphicPath = data['projectGraphicPath'] ?? '';
+    _projectPasswordCheck = data['projectPasswordCheck'] ?? '';
+
+    String createDateTimeUTCString = data['createDateTimeUTC'] ?? '';
+    if (createDateTimeUTCString.isNotEmpty)
+      _createDateTimeUTC = DateTime.parse(createDateTimeUTCString);
+    else
+      _createDateTimeUTC = DateTime.now().toUtc();
 
     String? projectPassword = SettingsManager.getProjectPassword(serverId);
 
@@ -79,10 +90,18 @@ class DomeProject extends ChangeNotifier {
       Logger.print('project password for project \'$_name\' not found');
     }
 
-    Logger.print(
-        'create date time utc: ${_createDateTimeUTC.toString()} | is utc: ${(_createDateTimeUTC.isUtc ? "true" : "false")}');
+    // Logger.print('create date time utc: ${_createDateTimeUTC.toString()} | is utc: ${(_createDateTimeUTC.isUtc ? "true" : "false")}');
 
     _serverId = serverId;
+  }
+
+  bool isValid() {
+    if (_name.isEmpty) return false;
+    if (_owner.isEmpty) return false;
+    if (_type == DomeProjectType.none) return false;
+    if (_projectPasswordCheck.isEmpty) return false;
+
+    return true;
   }
 
   /// only the name, password, and graphic are considered content here
@@ -100,8 +119,9 @@ class DomeProject extends ChangeNotifier {
       modified = true;
     }
 
-    if (source._graphicBytes.isNotEmpty) {
+    if (source._graphicBytes.isNotEmpty && source._graphicPath.isNotEmpty) {
       _graphicBytes = source._graphicBytes;
+      _graphicPath = source._graphicPath;
       modified = true;
     }
 

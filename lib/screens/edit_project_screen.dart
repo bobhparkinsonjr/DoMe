@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../devtools/logger.dart';
+
 import '../project/dome_project.dart';
 
 import '../utilities/password_validator.dart';
@@ -130,6 +132,8 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
         setState(() {
           _processing = true;
         });
+
+        Logger.print('updating project | image file path: \'$_imageFilePath\'');
 
         Uint8List? graphicBytes = await ImageTools.getImageBytes(_imageFilePath);
 

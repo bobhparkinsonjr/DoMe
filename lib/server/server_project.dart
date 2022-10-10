@@ -132,10 +132,26 @@ class ServerProject {
   /// on success, returns the path to the graphic on the server, otherwise returns null
   static Future<String?> updateServerGraphicBytes(String projectId, String ext, Uint8List projectGraphicBytes) async {
     if (!(ServerAuth.isLoggedIn())) return null;
-    if (projectId.isEmpty) return null;
-    if (!(DomeProject.graphicSupportedExtensions.contains(ext))) return null;
-    if (projectGraphicBytes.isEmpty) return null;
-    if (projectGraphicBytes.length > DomeProject.graphicMaxSizeBytes) return null;
+
+    if (projectId.isEmpty) {
+      Logger.print('cannot update server graphic bytes | project Id is missing');
+      return null;
+    }
+
+    if (!(DomeProject.graphicSupportedExtensions.contains(ext))) {
+      Logger.print('cannot update server graphic bytes | unsupported ext \'$ext\'');
+      return null;
+    }
+
+    if (projectGraphicBytes.isEmpty) {
+      Logger.print('cannot update server graphic bytes | project graphic bytes is empty');
+      return null;
+    }
+
+    if (projectGraphicBytes.length > DomeProject.graphicMaxSizeBytes) {
+      Logger.print('cannot update server graphic bytes | graphic is too large');
+      return null;
+    }
 
     try {
       String graphicLocation = 'ProjectImages/$projectId/projectGraphic$ext';
@@ -176,9 +192,17 @@ class ServerProject {
       Map<String, Object> updateMap = {};
 
       if (domeProject.getGraphicBytes().isNotEmpty) {
+        Logger.print('will try to update project graphic');
         String ext = domeProject.getGraphicExt();
         String? graphicLocation = await updateServerGraphicBytes(projectId, ext, domeProject.getGraphicBytes());
-        if (graphicLocation != null) updateMap['projectGraphicPath'] = graphicLocation;
+        if (graphicLocation != null) {
+          updateMap['projectGraphicPath'] = graphicLocation;
+          Logger.print('graphic location: \'$graphicLocation\'');
+        } else {
+          Logger.print('failed to update graphic on server');
+        }
+      } else {
+        Logger.print('no graphic bytes provided, will not update server');
       }
 
       updateMap['projectName'] = projectName;
@@ -262,18 +286,30 @@ class ServerProject {
           await FirebaseFirestore.instance.collection('projects').where('owner', isEqualTo: userEmail).get();
 
       if (v.docs.length > 0) {
+        Logger.print('found ${v.docs.length} owned projects');
+
         List<DomeProject> projects = [];
 
         for (int i = 0; i < v.docs.length; ++i) {
           Map<String, dynamic> projectData = v.docs[i].data();
-          projects.add(DomeProject.data(data: projectData, serverId: v.docs[i].id));
-          Logger.print('added document index \'$i\' with id \'${v.docs[i].id}\'');
+          if (projectData != null) {
+            DomeProject domeProject = DomeProject.data(data: projectData, serverId: v.docs[i].id);
+
+            if (domeProject.isValid()) {
+              projects.add(domeProject);
+              Logger.print('added document index \'$i\' with id \'${v.docs[i].id}\'');
+            } else {
+              Logger.print('skipping invalid dome project at index $i');
+            }
+          } else {
+            Logger.print('project data is null at index $i, will skip');
+          }
         }
 
         return projects;
       }
     } catch (e) {
-      // empty
+      Logger.print('failed to get owned projects | exception: \'${e.toString()}\'');
     }
 
     return [];
@@ -290,6 +326,8 @@ class ServerProject {
           await FirebaseFirestore.instance.collection('shared_projects').where('shareTo', isEqualTo: userEmail).get();
 
       if (v.docs.length > 0) {
+        Logger.print('found ${v.docs.length} shared projects');
+
         List<DomeProject> projects = [];
 
         for (int i = 0; i < v.docs.length; ++i) {
@@ -307,7 +345,7 @@ class ServerProject {
         return projects;
       }
     } catch (e) {
-      // empty
+      Logger.print('failed to get shared projects | exception: \'${e.toString()}\'');
     }
 
     return [];
