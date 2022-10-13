@@ -6,8 +6,8 @@ import '../settings/app_colors.dart';
 
 import '../project/dome_project.dart';
 
-import 'clip_br_rect_shape_border.dart';
-import 'app_bar_button.dart';
+import '../controls/clip_br_rect_shape_border.dart';
+import '../controls/app_bar_button.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

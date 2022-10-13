@@ -14,7 +14,7 @@ import '../controls/screen_frame.dart';
 import '../controls/app_primary_prompt.dart';
 import '../controls/app_choose_graphic_button.dart';
 import '../controls/app_button.dart';
-import '../controls/app_radio_button.dart';
+// import '../controls/app_radio_button.dart';
 import '../controls/app_error_tag.dart';
 import '../controls/app_text_field.dart';
 import '../controls/app_password_text_field.dart';
@@ -86,6 +86,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                 visible: _passwordValidateType != PasswordValidateType.valid &&
                     _passwordValidateType != PasswordValidateType.invalidEmpty,
               ),
+              /*
               const AppFormFieldSpacer(),
               for (DomeProjectType projectType in DomeProjectType.values)
                 if (projectType != DomeProjectType.none)
@@ -100,6 +101,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       });
                     },
                   ),
+              */
               const AppFormFieldSpacer(),
               _appendAppButtons(),
             ],
@@ -140,7 +142,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
             case DomeProjectType.todo:
               Navigator.pop(context);
               break;
-            // TODO: support the value collection project type
             default:
               // TODO: error, unknown project type
               break;

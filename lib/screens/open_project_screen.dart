@@ -9,7 +9,8 @@ import '../project/dome_project.dart';
 import '../project/dome_project_list.dart';
 import '../project/dome_project_manager.dart';
 
-import '../controls/project_card.dart';
+import '../cards/project_card.dart';
+
 import '../controls/open_project_frame.dart';
 
 import '../dialogs/app_dialog.dart';
@@ -118,7 +119,6 @@ class _OpenProjectScreenState extends State<OpenProjectScreen> {
         await Navigator.of(context).push(MaterialPageRoute(builder: (context) => TodoListScreen()));
         await domeProjectList.setupProjects();
         break;
-      // TODO: support the value collection project type
       default:
         // TODO: error, unknown project type
         break;

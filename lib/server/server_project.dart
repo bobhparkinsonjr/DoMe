@@ -11,6 +11,7 @@ import '../devtools/logger.dart';
 import '../project/dome_project.dart';
 import '../project/dome_project_item.dart';
 import '../project/dome_project_todo_item.dart';
+import '../project/dome_project_comment.dart';
 
 import '../utilities/password_validator.dart';
 import '../utilities/app_encryptor.dart';
@@ -250,9 +251,8 @@ class ServerProject {
           }
           break;
 
-        case DomeProjectType.valueCollection:
-          // TODO: remove items
-          break;
+        // case DomeProjectType.valueCollection:
+        // break;
 
         default:
           return false;
@@ -457,9 +457,8 @@ class ServerProject {
           domeProject.sortItems();
           break;
 
-        case DomeProjectType.valueCollection:
-          // TODO: update items for a value collection
-          break;
+        // case DomeProjectType.valueCollection:
+        // break;
 
         default:
           return false;
@@ -568,6 +567,7 @@ class ServerProject {
         'description': AppEncryptor.encryptPasswordString(description, projectPassword),
         'createDateTimeUTC': createDateTimeUTC.toString(),
         'completeDateTimeUTC': completeDateTimeUTC.toString(),
+        'author': item.getAuthor(),
         'indexHint': item.getIndexHint(),
       });
 
@@ -666,5 +666,84 @@ class ServerProject {
     }
 
     return Uint8List(0);
+  }
+
+  /// this method only adds the given comment to the server, it does not add the comment into the given item
+  static Future<bool> createComment(DomeProjectTodoItem item, DomeProjectComment comment) async {
+    if (!(ServerAuth.isLoggedIn())) return false;
+
+    String projectPassword = item.getProject().getPassword();
+    if (projectPassword.isEmpty) return false;
+
+    String commentMessage = comment.getCommentMessage();
+    if (commentMessage.isEmpty) return false;
+
+    DateTime createDateTimeUTC = comment.getCreateDateTimeUTC();
+
+    String author = comment.getAuthor();
+    if (author.isEmpty) return false;
+
+    try {
+      DocumentReference docRef = await FirebaseFirestore.instance.collection('comments').add({
+        'todoId': item.getServerId(),
+        'commentMessage': AppEncryptor.encryptPasswordString(commentMessage, projectPassword),
+        'createDateTimeUTC': createDateTimeUTC.toString(),
+        'author': author,
+      });
+
+      if (docRef.id.isEmpty) return false;
+
+      comment.setServerId(docRef.id);
+
+      return true;
+    } catch (e) {
+      // empty
+    }
+
+    return false;
+  }
+
+  // TODO: deleteComment
+
+  /*
+  paginate maybe something like:
+FirebaseDatabase.getInstance(firebaseApp)
+    .getReference("resources")
+    .child(FSeason.key)
+    .orderByKey()
+    .startAt(id)
+    .limit(size)
+  */
+  static Future<bool> updateClientComments(DomeProjectTodoItem item) async {
+    if (!(ServerAuth.isLoggedIn())) return false;
+
+    String projectPassword = item.getProject().getPassword();
+    if (projectPassword.isEmpty) return false;
+
+    String itemServerId = item.getServerId();
+    if (itemServerId.isEmpty) return false;
+
+    try {
+      QuerySnapshot<Map<String, dynamic>> v =
+          await FirebaseFirestore.instance.collection('comments').where('todoId', isEqualTo: itemServerId).get();
+
+      item.clearComments();
+
+      for (int i = 0; i < v.docs.length; ++i) {
+        Map<String, dynamic> commentData = v.docs[i].data();
+        item.appendComment(
+            domeProjectComment:
+                DomeProjectComment.data(data: commentData, projectPassword: projectPassword, serverId: v.docs[i].id),
+            updateServer: false);
+      }
+
+      item.sortComments();
+
+      return true;
+    } catch (e) {
+      // empty
+    }
+
+    return false;
   }
 }

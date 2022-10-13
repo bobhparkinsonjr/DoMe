@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../server/server_auth.dart';
+
 import '../utilities/app_encryptor.dart';
 
 import 'dome_project.dart';
@@ -20,10 +22,13 @@ class DomeProjectItem extends ChangeNotifier {
   bool _dragging = false;
   bool _detailsVisible = false;
 
-  DomeProjectItem({required DomeProject project, String itemName = ''}) {
+  String _author = '';
+
+  DomeProjectItem({required DomeProject project, String itemName = '', String author = ''}) {
     _project = project;
     _name = itemName;
     _createDateTimeUTC = DateTime.now().toUtc();
+    _author = author;
   }
 
   DomeProjectItem.data(
@@ -32,12 +37,22 @@ class DomeProjectItem extends ChangeNotifier {
       required String projectPassword,
       String serverId = ''}) {
     _project = project;
-    _name = AppEncryptor.decryptPasswordString(data['name'], projectPassword);
-    _createDateTimeUTC = DateTime.parse(data['createDateTimeUTC']);
 
-    if (data.containsKey('indexHint')) {
-      _indexHint = data['indexHint'];
-    }
+    String encryptedName = data['name'] ?? '';
+    if (encryptedName.isNotEmpty)
+      _name = AppEncryptor.decryptPasswordString(encryptedName, projectPassword);
+    else
+      _name = '';
+
+    String createDateTimeUTCString = data['createDateTimeUTC'] ?? '';
+    if (createDateTimeUTCString.isNotEmpty)
+      _createDateTimeUTC = DateTime.parse(createDateTimeUTCString);
+    else
+      _createDateTimeUTC = DateTime.now().toUtc();
+
+    _indexHint = data['indexHint'] ?? -1;
+
+    _author = data['author'] ?? '';
 
     _serverId = serverId;
   }
@@ -129,6 +144,18 @@ class DomeProjectItem extends ChangeNotifier {
     df.add_jm();
 
     return 'created ${df.format(localDate)}';
+  }
+
+  bool isOwned() {
+    return (ServerAuth.getCurrentUserEmail() == _author);
+  }
+
+  bool hasAuthor() {
+    return _author.isNotEmpty;
+  }
+
+  String getAuthor() {
+    return _author;
   }
 
   void setServerId(String serverId) {

@@ -17,6 +17,7 @@ const Color kAppScreenBackgroundColor = Color(0xFF2C3348);
 const Color kAppErrorTextColor = Color(0xFFD74242);
 const Color kAppInfoTextColor = Color(0xFFD1DCFB);
 const Color kAppLabelTextColor = Color(0xFFF5F7FF);
+const Color kAppTechLabelTextColor = Color(0xFFaaaaaa);
 
 const Color kAppPromptColor = Color(0xFFA1BCD7);
 

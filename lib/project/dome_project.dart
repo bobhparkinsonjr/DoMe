@@ -19,7 +19,7 @@ import 'dome_project_todo_item.dart';
 enum DomeProjectType {
   none,
   todo,
-  valueCollection,
+  // valueCollection,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -463,8 +463,8 @@ class DomeProject extends ChangeNotifier {
       case DomeProjectType.todo:
         return "Todo List";
 
-      case DomeProjectType.valueCollection:
-        return "Value Collection List";
+      // case DomeProjectType.valueCollection:
+      //   return "Value Collection List";
 
       default:
         // empty
@@ -479,8 +479,8 @@ class DomeProject extends ChangeNotifier {
       case DomeProjectType.todo:
         return "A simple list of things to do.";
 
-      case DomeProjectType.valueCollection:
-        return "This is a list of items, where each item is a collection of numerical values you wish to track over time.  For example, you could track a balance owed.  Another example, you could track your body weight.";
+      // case DomeProjectType.valueCollection:
+      //   return "This is a list of items, where each item is a collection of numerical values you wish to track over time.  For example, you could track a balance owed.  Another example, you could track your body weight.";
 
       default:
         // empty

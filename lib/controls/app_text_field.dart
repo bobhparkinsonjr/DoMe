@@ -23,6 +23,7 @@ const InputDecoration kAppTextFieldInputDecoration = InputDecoration(
     borderSide: BorderSide(color: kAppFocusColor, width: 2.0),
     borderRadius: BorderRadius.all(Radius.circular(32.0)),
   ),
+  // constraints: BoxConstraints(minWidth: 50.0, maxWidth: 400.0),
 );
 
 const TextStyle kAppTextFieldTextStyle = TextStyle(

@@ -5,7 +5,7 @@ import 'dart:ui';
 import '../devtools/logger.dart';
 
 import '../controls/view_project_frame.dart';
-import '../controls/todo_card.dart';
+import '../cards/todo_card.dart';
 
 import '../project/dome_project_manager.dart';
 import '../project/dome_project.dart';

@@ -22,6 +22,7 @@ const InputDecoration kAppMultilineTextFieldInputDecoration = InputDecoration(
     borderSide: BorderSide(color: kAppFocusColor, width: 2.0),
     borderRadius: BorderRadius.all(Radius.circular(32.0)),
   ),
+  // constraints: BoxConstraints(minWidth: 50.0, maxWidth: 400.0),
 );
 
 const TextStyle kAppMultilineTextFieldTextStyle = TextStyle(
@@ -36,6 +37,7 @@ class AppMultilineTextField extends StatefulWidget {
   final String initialValue;
   final bool focus;
   final int maxLength;
+  final TextEditingController? controller;
 
   const AppMultilineTextField(
       {Key? key,
@@ -43,7 +45,8 @@ class AppMultilineTextField extends StatefulWidget {
       required this.hintText,
       this.initialValue = '',
       this.focus = false,
-      this.maxLength = -1})
+      this.maxLength = -1,
+      this.controller})
       : super(key: key);
 
   @override
@@ -56,7 +59,10 @@ class _AppMultilineTextFieldState extends State<AppMultilineTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
+    if (widget.controller == null)
+      _controller = TextEditingController(text: widget.initialValue);
+    else
+      _controller = widget.controller!;
   }
 
   @override

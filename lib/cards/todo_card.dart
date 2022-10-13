@@ -8,14 +8,16 @@ import '../settings/app_colors.dart';
 import '../settings/app_progress.dart';
 import '../settings/app_styles.dart';
 
+import '../server/server_project.dart';
+
 import '../dialogs/app_dialog.dart';
 
 import '../screens/create_todo_item_screen.dart';
 
 import '../project/dome_project_todo_item.dart';
 
-import 'clip_br_rect_shape.dart';
-import 'clip_br_rect_shape_border.dart';
+import '../controls/clip_br_rect_shape.dart';
+import '../controls/clip_br_rect_shape_border.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,12 +64,17 @@ class TodoCard extends StatefulWidget {
 }
 
 class _TodoCardState extends State<TodoCard> {
+  // late BuildContext _latestTopContext;
+  // late BuildContext _latestContext;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext topContext) {
+    // _latestTopContext = topContext;
     return ChangeNotifierProvider.value(
       value: widget.todoItem,
       child: Consumer<DomeProjectTodoItem>(
         builder: (context, todoItem, child) {
+          // _latestContext = context;
           return Container(
             margin: const EdgeInsets.only(top: 8.0, left: 4.0, right: 4.0),
             padding: const EdgeInsets.only(right: 8.0, top: 12.0, bottom: 12.0),
@@ -99,6 +106,8 @@ class _TodoCardState extends State<TodoCard> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () async {
+                      // TODO: go to TodoScreen
+                      // _editTodoItemScreen
                       await todoItem.toggleComplete(updateServer: true);
                     },
                     child: Column(
@@ -157,22 +166,7 @@ class _TodoCardState extends State<TodoCard> {
                 const SizedBox(width: 10.0),
                 GestureDetector(
                   onTap: () async {
-                    DomeProjectTodoItem? updatedTodoItem = await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) {
-                          return CreateTodoItemScreen(
-                            mode: CreateTodoItemScreenMode.edit,
-                            initialItemName: todoItem.getName(),
-                            initialItemDescription: todoItem.getDescription(),
-                            domeProject: todoItem.getProject(),
-                          );
-                        },
-                      ),
-                    ) as DomeProjectTodoItem;
-
-                    if (updatedTodoItem != null) {
-                      await todoItem.updateContent(source: updatedTodoItem, updateServer: true);
-                    }
+                    await _editTodoItemScreen(context, todoItem);
                   },
                   child: Icon(
                     Icons.edit_rounded,
@@ -210,5 +204,22 @@ class _TodoCardState extends State<TodoCard> {
         // child: ,
       ),
     );
+  }
+
+  Future<void> _editTodoItemScreen(BuildContext context, DomeProjectTodoItem todoItem) async {
+    DomeProjectTodoItem? updatedTodoItem = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (BuildContext context) {
+          return CreateTodoItemScreen(
+            item: todoItem,
+            domeProject: todoItem.getProject(),
+          );
+        },
+      ),
+    );
+
+    if (updatedTodoItem != null) {
+      await todoItem.updateContent(source: updatedTodoItem, updateServer: true);
+    }
   }
 }
