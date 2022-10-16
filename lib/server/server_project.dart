@@ -17,6 +17,7 @@ import '../utilities/password_validator.dart';
 import '../utilities/app_encryptor.dart';
 import '../utilities/settings_manager.dart';
 import '../utilities/ref.dart';
+import '../utilities/timestamp_tools.dart';
 
 import 'server_auth.dart';
 
@@ -176,7 +177,11 @@ class ServerProject {
     return null;
   }
 
-  /// project content includes the name, password, and graphic only
+  /// project content includes the following only:
+  ///   name
+  ///   password
+  ///   graphic
+  ///   detailsTotalLatestComments
   static Future<bool> updateServerProjectContent(DomeProject domeProject) async {
     if (!(ServerAuth.isLoggedIn())) return false;
 
@@ -188,6 +193,9 @@ class ServerProject {
 
     String projectId = domeProject.getServerId();
     if (projectId.isEmpty) return false;
+
+    int detailsTotalLatestComments = domeProject.getDetailsTotalLatestComments();
+    if (detailsTotalLatestComments < 0) detailsTotalLatestComments = 0;
 
     try {
       Map<String, Object> updateMap = {};
@@ -207,6 +215,8 @@ class ServerProject {
       }
 
       updateMap['projectName'] = projectName;
+
+      updateMap['detailsTotalLatestComments'] = detailsTotalLatestComments;
 
       if (domeProject.isOwned())
         updateMap['projectPasswordCheck'] = AppEncryptor.encryptPasswordString(_passwordCheckString, projectPassword);
@@ -346,6 +356,32 @@ class ServerProject {
       }
     } catch (e) {
       Logger.print('failed to get shared projects | exception: \'${e.toString()}\'');
+    }
+
+    return [];
+  }
+
+  static Future<List<String>> getShareToEmails(DomeProject domeProject) async {
+    if (!(ServerAuth.isLoggedIn())) return [];
+
+    try {
+      String projectId = domeProject.getServerId();
+
+      QuerySnapshot<Map<String, dynamic>> v =
+          await FirebaseFirestore.instance.collection('shared_projects').where('projectId', isEqualTo: projectId).get();
+
+      if (v.docs.length > 0) {
+        List<String> shareToEmails = [];
+
+        for (int i = 0; i < v.docs.length; ++i) {
+          String shareTo = v.docs[i].data()['shareTo'] ?? '';
+          if (shareTo.isNotEmpty) shareToEmails.add(shareTo);
+        }
+
+        return shareToEmails;
+      }
+    } catch (e) {
+      Logger.print('failed to get share-to emails | exception: \'${e.toString()}\'');
     }
 
     return [];
@@ -678,7 +714,9 @@ class ServerProject {
     String commentMessage = comment.getCommentMessage();
     if (commentMessage.isEmpty) return false;
 
-    DateTime createDateTimeUTC = comment.getCreateDateTimeUTC();
+    // DateTime createDateTimeUTC = comment.getCreateDateTimeUTC();
+    Timestamp createTimestampUTC =
+        TimestampTools.convertDateTimeUTC(comment.getCreateDateTimeUTC()); // Timestamp.fromDate(createDateTimeUTC);
 
     String author = comment.getAuthor();
     if (author.isEmpty) return false;
@@ -687,7 +725,8 @@ class ServerProject {
       DocumentReference docRef = await FirebaseFirestore.instance.collection('comments').add({
         'todoId': item.getServerId(),
         'commentMessage': AppEncryptor.encryptPasswordString(commentMessage, projectPassword),
-        'createDateTimeUTC': createDateTimeUTC.toString(),
+        // 'createDateTimeUTC': createDateTimeUTC.toString(),
+        'createTimestampUTC': createTimestampUTC,
         'author': author,
       });
 
@@ -703,18 +742,32 @@ class ServerProject {
     return false;
   }
 
-  // TODO: deleteComment
+  /// this only deletes the comment from the server, it does not remove it from the todo item
+  static Future<bool> deleteComment(DomeProjectTodoItem item, DomeProjectComment comment) async {
+    if (!(ServerAuth.isLoggedIn())) return false;
+    if (item.getServerId().isEmpty) return false;
+    if (comment.getServerId().isEmpty) return false;
 
-  /*
-  paginate maybe something like:
-FirebaseDatabase.getInstance(firebaseApp)
-    .getReference("resources")
-    .child(FSeason.key)
-    .orderByKey()
-    .startAt(id)
-    .limit(size)
-  */
-  static Future<bool> updateClientComments(DomeProjectTodoItem item) async {
+    try {
+      bool retVal = false;
+
+      await FirebaseFirestore.instance.collection('comments').doc(comment.getServerId()).delete().then((doc) {
+        Logger.print('delete comment callback - success');
+        retVal = true;
+      }, onError: (e) {
+        Logger.print('failed to delete comment | error: \'$e\'');
+      });
+
+      Logger.print('deleted comment completed | return value: $retVal');
+      return retVal;
+    } catch (e) {
+      Logger.print('problem deleting comment | exception: \'${e.toString()}\'');
+    }
+
+    return false;
+  }
+
+  static Future<bool> updateClientComments(DomeProjectTodoItem item, {int maxComments = -1}) async {
     if (!(ServerAuth.isLoggedIn())) return false;
 
     String projectPassword = item.getProject().getPassword();
@@ -724,8 +777,20 @@ FirebaseDatabase.getInstance(firebaseApp)
     if (itemServerId.isEmpty) return false;
 
     try {
-      QuerySnapshot<Map<String, dynamic>> v =
-          await FirebaseFirestore.instance.collection('comments').where('todoId', isEqualTo: itemServerId).get();
+      QuerySnapshot<Map<String, dynamic>> v;
+
+      if (maxComments > 0) {
+        v = await FirebaseFirestore.instance
+            .collection('comments')
+            .where('todoId', isEqualTo: itemServerId)
+            .orderBy('createTimestampUTC', descending: true)
+            .limit(maxComments)
+            .get();
+        // Logger.print('max comments: $maxComments | found: ${v.docs.length}');
+      } else {
+        v = await FirebaseFirestore.instance.collection('comments').where('todoId', isEqualTo: itemServerId).get();
+        // Logger.print('retrieved all comments');
+      }
 
       item.clearComments();
 

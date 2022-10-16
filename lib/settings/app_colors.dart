@@ -17,7 +17,7 @@ const Color kAppScreenBackgroundColor = Color(0xFF2C3348);
 const Color kAppErrorTextColor = Color(0xFFD74242);
 const Color kAppInfoTextColor = Color(0xFFD1DCFB);
 const Color kAppLabelTextColor = Color(0xFFF5F7FF);
-const Color kAppTechLabelTextColor = Color(0xFFaaaaaa);
+const Color kAppSubLabelTextColor = Color(0xffcaced4);
 
 const Color kAppPromptColor = Color(0xFFA1BCD7);
 
@@ -33,6 +33,7 @@ const Color kAppProjectCardFillColor = Color(0xC03D466D);
 const Color kAppProjectCardOutlineColor = Color(0xC0A7B6E6);
 const Color kAppProjectCardPrimaryColor = Color(0xFF9DC1FC);
 const Color kAppProjectCardSecondaryColor = Color(0xFFC6CCD0);
+const Color kAppProjectCardThirdColor = Color(0xFFADB2B5);
 const Color kAppProjectCardCompleteColor = Color(0xFF86EB9D);
 const Color kAppProjectCardIncompleteColor = Color(0xFFE78181);
 

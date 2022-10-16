@@ -28,6 +28,9 @@ class DomeProject extends ChangeNotifier {
   static const int nameMaxLength = 32;
   static const int graphicMaxSizeBytes = 1024 * 1024 * 5; // 5 MB
 
+  /// the min comments to show in details should be zero
+  static const int maxDetailsTotalLatestComments = 10;
+
   /// all extensions listed here are in all lower case, and always start with a dot
   static const List<String> graphicSupportedExtensions = ['.jpg', '.png'];
 
@@ -39,6 +42,7 @@ class DomeProject extends ChangeNotifier {
   String _graphicPath = '';
   DateTime _createDateTimeUTC = DateTime.now().toUtc();
   List<DomeProjectItem> _items = [];
+  int _detailsTotalLatestComments = 0;
 
   String _projectPasswordCheck = '';
 
@@ -53,7 +57,8 @@ class DomeProject extends ChangeNotifier {
       String password = '',
       Uint8List? graphicBytes,
       String graphicPath = '',
-      String projectPasswordCheck = ''}) {
+      String projectPasswordCheck = '',
+      int detailsTotalLatestComments = 0}) {
     _name = name;
     _owner = owner;
     _type = type;
@@ -61,6 +66,7 @@ class DomeProject extends ChangeNotifier {
     if (graphicBytes != null) _graphicBytes = graphicBytes;
     _graphicPath = graphicPath;
     _projectPasswordCheck = projectPasswordCheck;
+    _detailsTotalLatestComments = detailsTotalLatestComments;
   }
 
   DomeProject.data({required Map<String, dynamic> data, String serverId = ''}) {
@@ -75,6 +81,8 @@ class DomeProject extends ChangeNotifier {
 
     _graphicPath = data['projectGraphicPath'] ?? '';
     _projectPasswordCheck = data['projectPasswordCheck'] ?? '';
+
+    _detailsTotalLatestComments = data['detailsTotalLatestComments'] ?? 0;
 
     String createDateTimeUTCString = data['createDateTimeUTC'] ?? '';
     if (createDateTimeUTCString.isNotEmpty)
@@ -104,7 +112,11 @@ class DomeProject extends ChangeNotifier {
     return true;
   }
 
-  /// only the name, password, and graphic are considered content here
+  /// only the following are considered content here:
+  ///   name
+  ///   password
+  ///   graphic
+  ///   detailsTotalLatestComments
   Future<bool> updateContent({required DomeProject source, bool updateServer = false}) async {
     bool modified = false;
 
@@ -122,6 +134,11 @@ class DomeProject extends ChangeNotifier {
     if (source._graphicBytes.isNotEmpty && source._graphicPath.isNotEmpty) {
       _graphicBytes = source._graphicBytes;
       _graphicPath = source._graphicPath;
+      modified = true;
+    }
+
+    if (source._detailsTotalLatestComments >= 0 && source._detailsTotalLatestComments != _detailsTotalLatestComments) {
+      _detailsTotalLatestComments = source._detailsTotalLatestComments;
       modified = true;
     }
 
@@ -147,6 +164,17 @@ class DomeProject extends ChangeNotifier {
 
   bool isProcessing() {
     return _processing;
+  }
+
+  int getDetailsTotalLatestComments() {
+    return _detailsTotalLatestComments;
+  }
+
+  void setDetailsTotalLatestComments(int v) {
+    if (_detailsTotalLatestComments != v) {
+      _detailsTotalLatestComments = v;
+      notifyListeners();
+    }
   }
 
   void setCreateDateTimeUTC(DateTime dt) {

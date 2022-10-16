@@ -4,9 +4,12 @@ import '../settings/app_colors.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+const double kAppLabelFontSize = 18.0;
+
 const TextStyle kAppLabelTextStyle = TextStyle(
-  fontSize: 18.0,
+  fontSize: kAppLabelFontSize,
   color: kAppLabelTextColor,
+  height: 1.4,
   shadows: [
     Shadow(
       blurRadius: 2.0,
@@ -28,8 +31,16 @@ class AppLabel extends StatelessWidget {
   final String message;
   final bool visible;
   final AppLabelAlign labelAlign;
+  final double scale;
+  final bool expand;
 
-  const AppLabel({Key? key, required this.message, this.visible = true, this.labelAlign = AppLabelAlign.left})
+  const AppLabel(
+      {Key? key,
+      required this.message,
+      this.visible = true,
+      this.labelAlign = AppLabelAlign.left,
+      this.scale = 1.0,
+      this.expand = false})
       : super(key: key);
 
   @override
@@ -39,19 +50,20 @@ class AppLabel extends StatelessWidget {
       child: Row(
         mainAxisAlignment: _getAlignment(),
         children: [
-          Padding(
-            padding: const EdgeInsets.only(
-              top: 4.0,
-              left: 18.0,
-              right: 18.0,
-            ),
-            child: Text(
-              message,
-              style: kAppLabelTextStyle,
-            ),
-          ),
+          expand
+              ? Expanded(
+                  child: _getText(),
+                )
+              : _getText(),
         ],
       ),
+    );
+  }
+
+  Widget _getText() {
+    return Text(
+      message,
+      style: kAppLabelTextStyle.copyWith(fontSize: kAppLabelFontSize * scale),
     );
   }
 

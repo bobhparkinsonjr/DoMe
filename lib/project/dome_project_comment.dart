@@ -1,6 +1,11 @@
-import 'package:dome/utilities/app_encryptor.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../devtools/logger.dart';
+
+import '../utilities/app_encryptor.dart';
+import '../utilities/timestamp_tools.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -23,11 +28,7 @@ class DomeProjectComment extends ChangeNotifier {
     _commentMessage = data['commentMessage'] ?? '';
     if (_commentMessage.isNotEmpty) _commentMessage = AppEncryptor.decryptPasswordString(_commentMessage, projectPassword);
 
-    String createDateTimeUTCString = data['createDateTimeUTC'] ?? '';
-    if (createDateTimeUTCString.isNotEmpty)
-      _createDateTimeUTC = DateTime.parse(createDateTimeUTCString);
-    else
-      _createDateTimeUTC = DateTime.now().toUtc();
+    _createDateTimeUTC = TimestampTools.convertTimestampUTC(data['createTimestampUTC'] ?? Timestamp.now());
 
     _author = data['author'] ?? '';
 

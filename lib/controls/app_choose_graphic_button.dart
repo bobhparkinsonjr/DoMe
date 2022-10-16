@@ -10,7 +10,7 @@ import '../settings/app_colors.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef AppChooseGraphicOnChanged = void Function(String imageFilePath);
+typedef AppChooseGraphicOnChanged = void Function(String imageFilePath, int sourceSizeBytes);
 
 const TextStyle kAppChooseGraphicButtonTextStyle = TextStyle(
   fontSize: 14.0,
@@ -92,10 +92,13 @@ class _AppChooseGraphicButtonState extends State<AppChooseGraphicButton> {
                   FilePickerResult? result = await FilePicker.platform.pickFiles();
 
                   if (result != null) {
+                    File source = File(_imageFilePath);
+                    int sourceSizeBytes = await source.length();
+
                     setState(() {
                       _imageFilePath = result.files.single.path!;
                       Logger.print('image file path chosen: \'$_imageFilePath\'');
-                      widget.onChanged(_imageFilePath);
+                      widget.onChanged(_imageFilePath, sourceSizeBytes);
                     });
                   } else {
                     // User canceled the picker

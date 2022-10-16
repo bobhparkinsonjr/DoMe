@@ -8,6 +8,7 @@ import '../settings/app_colors.dart';
 import '../settings/app_progress.dart';
 import '../settings/app_styles.dart';
 
+import '../server/server_auth.dart';
 import '../server/server_project.dart';
 
 import '../dialogs/app_dialog.dart';
@@ -21,6 +22,8 @@ import '../controls/clip_br_rect_shape.dart';
 import '../controls/clip_br_rect_shape_border.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+typedef CommentCardOnDeleteCallback = void Function();
 
 const TextStyle kCommentCardMessageStyle = TextStyle(
   fontSize: 20.0,
@@ -55,9 +58,11 @@ const double kCommentCardToolCheckBoxSize = 24.0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 class CommentCard extends StatefulWidget {
+  final DomeProjectTodoItem todoItem;
   final DomeProjectComment comment;
+  final CommentCardOnDeleteCallback onDelete;
 
-  const CommentCard({Key? key, required this.comment}) : super(key: key);
+  const CommentCard({Key? key, required this.todoItem, required this.comment, required this.onDelete}) : super(key: key);
 
   @override
   State<CommentCard> createState() => _CommentCardState();
@@ -124,25 +129,16 @@ class _CommentCardState extends State<CommentCard> {
                   ),
                 ),
                 const SizedBox(width: 5.0),
-                GestureDetector(
-                  onTap: () async {
-                    AppDialogResult? result = await AppDialog.showChoiceDialog(
-                        context: context,
-                        icon: Icons.warning_amber_rounded,
-                        title: 'Delete Comment',
-                        content: 'Are you sure you want to delete this comment?',
-                        option1: 'Yes',
-                        option2: 'No');
-
-                    if (result != null && result == AppDialogResult.option1) {
-                      Logger.print('user chose to delete the comment');
-                      // TODO
-                    }
-                  },
-                  child: Icon(
-                    Icons.delete,
-                    size: kCommentCardToolCheckBoxSize,
-                    color: kAppProjectCardPrimaryColor,
+                Visibility(
+                  visible:
+                      widget.todoItem.getProject().isOwned() || widget.comment.getAuthor() == ServerAuth.getCurrentUserEmail(),
+                  child: GestureDetector(
+                    onTap: widget.onDelete,
+                    child: Icon(
+                      Icons.delete,
+                      size: kCommentCardToolCheckBoxSize,
+                      color: kAppProjectCardPrimaryColor,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10.0),

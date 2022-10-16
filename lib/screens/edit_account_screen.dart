@@ -99,7 +99,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                         child: AppChooseGraphicButton(
                           prompt: 'choose avatar',
                           initialFillImage: _avatar,
-                          onChanged: (String imageFilePath) {
+                          onChanged: (String imageFilePath, int sourceSizeBytes) {
                             _avatarFilePath = imageFilePath;
                           },
                         ),
@@ -125,7 +125,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                         child: AppChooseGraphicButton(
                           prompt: 'choose background',
                           initialFillImage: _background,
-                          onChanged: (String imageFilePath) {
+                          onChanged: (String imageFilePath, int sourceSizeBytes) {
                             _backgroundFilePath = imageFilePath;
                           },
                         ),

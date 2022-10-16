@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../devtools/logger.dart';
+
 import '../utilities/app_encryptor.dart';
 
 import '../server/server_project.dart';
@@ -17,6 +19,9 @@ class DomeProjectTodoItem extends DomeProjectItem {
   bool _complete = false;
   DateTime _completeDateTimeUTC = DateTime.now().toUtc();
   List<DomeProjectComment> _comments = [];
+
+  DateTime _lastCommentCheck = DateTime.utc(2000);
+  bool _lastCommentCheckSet = false;
 
   DomeProjectTodoItem(
       {required DomeProject project,
@@ -112,18 +117,22 @@ class DomeProjectTodoItem extends DomeProjectItem {
   Future<bool> appendComment({required DomeProjectComment domeProjectComment, bool updateServer = true}) async {
     if (!(domeProjectComment.isValid())) return false;
 
+    bool retVal = true;
+
     if (updateServer) {
       setProcessing(true);
-      if (!(await ServerProject.createComment(this, domeProjectComment))) return false;
+      retVal = await ServerProject.createComment(this, domeProjectComment);
       setProcessing(false);
     }
 
-    _comments.add(domeProjectComment);
-    sortComments();
+    if (retVal) {
+      _comments.add(domeProjectComment);
+      sortComments();
 
-    notifyListeners();
+      notifyListeners();
+    }
 
-    return true;
+    return retVal;
   }
 
   void clearComments() {
@@ -146,5 +155,71 @@ class DomeProjectTodoItem extends DomeProjectItem {
     return _comments;
   }
 
-  // TODO: deleteComment
+  int _getLastCommentCheckElapsedMS() {
+    if (!_lastCommentCheckSet) return -1;
+
+    DateTime currentDT = DateTime.now().toUtc();
+    Duration elapsed = currentDT.difference(_lastCommentCheck);
+    return elapsed.inMilliseconds;
+  }
+
+  void _setLastCommentCheckNow() {
+    _lastCommentCheck = DateTime.now().toUtc();
+    _lastCommentCheckSet = true;
+  }
+
+  /// returns true if checked the server and potentially found changes to the comments
+  Future<bool> updateClientComments({int maxComments = -1, bool forceUpdate = false}) async {
+    if (!forceUpdate && _lastCommentCheckSet && _getLastCommentCheckElapsedMS() < (1000 * 60 * 60 * 1)) {
+      // Logger.print('updating client comments | leaving early');
+      return false;
+    }
+
+    /*
+    if (!forceUpdate) {
+      Logger.print(
+          'updating client comments | _lastCommentCheckSet: ${_lastCommentCheckSet.toString()} | elapsed: ${_getLastCommentCheckElapsedMS()}');
+    } else {
+      Logger.print('updating client comments | force update is true');
+    }
+    */
+
+    await ServerProject.updateClientComments(this, maxComments: maxComments);
+    _setLastCommentCheckNow();
+
+    notifyListeners();
+
+    return true;
+  }
+
+  Future<bool> deleteComment({required DomeProjectComment domeProjectComment, bool updateServer = true}) async {
+    String commentId = domeProjectComment.getServerId();
+
+    if (commentId.isEmpty) return false;
+
+    int origLength = _comments.length;
+    int i = 0;
+
+    while (i < _comments.length) {
+      if (commentId == _comments[i].getServerId()) {
+        _comments.removeAt(i);
+      } else {
+        ++i;
+      }
+    }
+
+    bool retVal = true;
+
+    if (origLength != _comments.length) {
+      if (updateServer) {
+        setProcessing(true);
+        retVal = await ServerProject.deleteComment(this, domeProjectComment);
+        setProcessing(false);
+      }
+
+      notifyListeners();
+    }
+
+    return retVal;
+  }
 }

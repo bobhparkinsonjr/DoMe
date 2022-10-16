@@ -15,6 +15,7 @@ import '../dialogs/app_dialog.dart';
 import '../screens/create_todo_item_screen.dart';
 
 import '../project/dome_project_todo_item.dart';
+import '../project/dome_project_comment.dart';
 
 import '../controls/clip_br_rect_shape.dart';
 import '../controls/clip_br_rect_shape_border.dart';
@@ -22,12 +23,12 @@ import '../controls/clip_br_rect_shape_border.dart';
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const TextStyle kTodoCardNameStyle = TextStyle(
-  fontSize: 20.0,
+  fontSize: 22.0, // 20.0,
   color: kAppProjectCardPrimaryColor,
   fontWeight: FontWeight.bold,
 
   // using this to vertically align the name with the checkbox
-  height: 1.3,
+  height: 1.1, // 1.3,
 
   shadows: [
     Shadow(
@@ -49,7 +50,13 @@ const TextStyle kTodoCardDescriptionStyle = TextStyle(
   color: kAppProjectCardSecondaryColor,
 );
 
-const double kTodoCardCheckBoxSize = 30.0;
+const TextStyle kTodoCardCommentStyle = TextStyle(
+  fontSize: 16.0,
+  fontStyle: FontStyle.italic,
+  color: kAppProjectCardThirdColor,
+);
+
+const double kTodoCardCheckBoxSize = 34.0; // 30.0;
 const double kTodoCardToolCheckBoxSize = 24.0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,56 +71,79 @@ class TodoCard extends StatefulWidget {
 }
 
 class _TodoCardState extends State<TodoCard> {
-  // late BuildContext _latestTopContext;
-  // late BuildContext _latestContext;
+  bool _checkingComments = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.todoItem.getProject().getDetailsTotalLatestComments() > 0) {
+      // Logger.print('${widget.todoItem.getName()} | details total latest comments: ${widget.todoItem.getProject().getDetailsTotalLatestComments()}');
+
+      // setState(() {
+      //   _checkingComments = true;
+      // });
+
+      widget.todoItem
+          .updateClientComments(maxComments: widget.todoItem.getProject().getDetailsTotalLatestComments())
+          .then((updated) {
+        // if (mounted) {
+        //   Logger.print(
+        //       '${widget.todoItem.getName()} | updated comments in todo card | total comments: ${widget.todoItem.getComments().length}');
+        //   setState(() {
+        //     _checkingComments = false;
+        //   });
+        // } else {
+        //   Logger.print('can\'t update comments in todo card, no longer mounted');
+        // }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext topContext) {
-    // _latestTopContext = topContext;
     return ChangeNotifierProvider.value(
       value: widget.todoItem,
       child: Consumer<DomeProjectTodoItem>(
         builder: (context, todoItem, child) {
-          // _latestContext = context;
-          return Container(
-            margin: const EdgeInsets.only(top: 8.0, left: 4.0, right: 4.0),
-            padding: const EdgeInsets.only(right: 8.0, top: 12.0, bottom: 12.0),
-            decoration: ShapeDecoration(
-              shape: ClipBRRectShapeBorder(
-                clipRatio: 0.35,
-                maxSize: 20.0,
-                thickness: 1.0,
-                outlineColor: kAppProjectCardOutlineColor,
-              ),
-              color: todoItem.isDragging() ? kAppCardDragFillColor : kAppProjectCardFillColor,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    await todoItem.toggleComplete(updateServer: true);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.only(left: 8.0, right: 10.0),
-                    child: Icon(
-                      todoItem.isComplete() ? Icons.check_circle_outlined : Icons.radio_button_unchecked,
-                      size: kTodoCardCheckBoxSize,
-                      color: todoItem.isComplete() ? kAppProjectCardCompleteColor : kAppProjectCardIncompleteColor,
-                    ),
-                  ),
+          return GestureDetector(
+            onTap: () async {
+              await _editTodoItemScreen(context, todoItem);
+            },
+            child: Container(
+              margin: const EdgeInsets.only(top: 8.0, left: 4.0, right: 4.0),
+              padding: const EdgeInsets.only(right: 8.0, top: 12.0, bottom: 12.0),
+              decoration: ShapeDecoration(
+                shape: ClipBRRectShapeBorder(
+                  clipRatio: 0.35,
+                  maxSize: 20.0,
+                  thickness: 1.0,
+                  outlineColor: kAppProjectCardOutlineColor,
                 ),
-                Expanded(
-                  child: GestureDetector(
+                color: todoItem.isDragging() ? kAppCardDragFillColor : kAppProjectCardFillColor,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
                     onTap: () async {
-                      // TODO: go to TodoScreen
-                      // _editTodoItemScreen
                       await todoItem.toggleComplete(updateServer: true);
                     },
+                    child: Container(
+                      padding: const EdgeInsets.only(left: 8.0, right: 10.0),
+                      child: Icon(
+                        todoItem.isComplete() ? Icons.check_circle_outlined : Icons.radio_button_unchecked,
+                        size: kTodoCardCheckBoxSize,
+                        color: todoItem.isComplete() ? kAppProjectCardCompleteColor : kAppProjectCardIncompleteColor,
+                      ),
+                    ),
+                  ),
+                  Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const SizedBox(height: 5.0),
                         Text(
                           todoItem.getName(),
                           style: kTodoCardNameStyle,
@@ -124,6 +154,7 @@ class _TodoCardState extends State<TodoCard> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              const SizedBox(height: 4.0),
                               Text(
                                 todoItem.getCreatedDateTimeLocalDescription(),
                                 style: kTodoCardDateTimeStyle,
@@ -143,61 +174,68 @@ class _TodoCardState extends State<TodoCard> {
                                   style: kTodoCardDescriptionStyle,
                                 ),
                               ),
+                              Visibility(
+                                visible: todoItem.getProject().getDetailsTotalLatestComments() > 0 &&
+                                    (todoItem.getComments().isNotEmpty || _checkingComments),
+                                child: _getComments(todoItem),
+                              ),
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 5.0),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      todoItem.toggleDetailsVisible();
-                    });
-                  },
-                  child: Icon(
-                    Icons.remove_red_eye,
-                    size: kTodoCardToolCheckBoxSize,
-                    color: kAppProjectCardPrimaryColor,
+                  const SizedBox(width: 10.0),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        todoItem.toggleDetailsVisible();
+                      });
+                    },
+                    child: Icon(
+                      Icons.remove_red_eye,
+                      size: kTodoCardToolCheckBoxSize,
+                      color: kAppProjectCardPrimaryColor,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10.0),
-                GestureDetector(
-                  onTap: () async {
-                    await _editTodoItemScreen(context, todoItem);
-                  },
-                  child: Icon(
-                    Icons.edit_rounded,
-                    size: kTodoCardToolCheckBoxSize,
-                    color: kAppProjectCardPrimaryColor,
+                  /*
+                  const SizedBox(width: 10.0),
+                  GestureDetector(
+                    onTap: () async {
+                      await _editTodoItemScreen(context, todoItem);
+                    },
+                    child: Icon(
+                      Icons.edit_rounded,
+                      size: kTodoCardToolCheckBoxSize,
+                      color: kAppProjectCardPrimaryColor,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10.0),
-                GestureDetector(
-                  onTap: () async {
-                    AppDialogResult? result = await AppDialog.showChoiceDialog(
-                        context: context,
-                        icon: Icons.warning_amber_rounded,
-                        title: 'Delete Todo Item',
-                        content: 'Are you sure you want to delete this todo item?\n\n${todoItem.getName()}',
-                        option1: 'Yes',
-                        option2: 'No');
+                  */
+                  const SizedBox(width: 10.0),
+                  GestureDetector(
+                    onTap: () async {
+                      AppDialogResult? result = await AppDialog.showChoiceDialog(
+                          context: context,
+                          icon: Icons.warning_amber_rounded,
+                          title: 'Delete Todo Item',
+                          content: 'Are you sure you want to delete this todo item?\n\n${todoItem.getName()}',
+                          option1: 'Yes',
+                          option2: 'No');
 
-                    if (result != null && result == AppDialogResult.option1) {
-                      Logger.print('user chose to delete the todo item');
-                      await todoItem.deleteTodoItem(updateServer: true);
-                    }
-                  },
-                  child: Icon(
-                    Icons.delete,
-                    size: kTodoCardToolCheckBoxSize,
-                    color: kAppProjectCardPrimaryColor,
+                      if (result != null && result == AppDialogResult.option1) {
+                        Logger.print('user chose to delete the todo item');
+                        await todoItem.deleteTodoItem(updateServer: true);
+                      }
+                    },
+                    child: Icon(
+                      Icons.delete,
+                      size: kTodoCardToolCheckBoxSize,
+                      color: kAppProjectCardPrimaryColor,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10.0),
-              ],
+                  const SizedBox(width: 10.0),
+                ],
+              ),
             ),
           );
         },
@@ -221,5 +259,30 @@ class _TodoCardState extends State<TodoCard> {
     if (updatedTodoItem != null) {
       await todoItem.updateContent(source: updatedTodoItem, updateServer: true);
     }
+  }
+
+  Widget _getComments(DomeProjectTodoItem todoItem) {
+    int maxComments = todoItem.getProject().getDetailsTotalLatestComments();
+    if (maxComments <= 0) return Container();
+
+    if (_checkingComments)
+      return Text(
+        '...',
+        textAlign: TextAlign.start,
+        style: kTodoCardCommentStyle,
+      );
+
+    List<DomeProjectComment> comments = todoItem.getComments();
+
+    return Column(
+      children: [
+        for (int i = 0; i < comments.length && i < maxComments; ++i)
+          Text(
+            comments[i].getCommentMessage(),
+            textAlign: TextAlign.start,
+            style: kTodoCardCommentStyle,
+          ),
+      ],
+    );
   }
 }

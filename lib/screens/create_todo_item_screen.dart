@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../devtools/logger.dart';
+
 import '../utilities/screen_tools.dart';
+
+import '../settings/app_colors.dart';
+import '../settings/app_styles.dart';
 
 import '../server/server_auth.dart';
 import '../server/server_project.dart';
 
 import '../cards/comment_card.dart';
+
+import '../dialogs/app_dialog.dart';
 
 import '../controls/app_primary_prompt.dart';
 import '../controls/app_text_field.dart';
@@ -16,7 +23,7 @@ import '../controls/app_form_field_spacer.dart';
 import '../controls/app_info_tag.dart';
 import '../controls/screen_frame.dart';
 import '../controls/app_label.dart';
-import '../controls/app_tech_label.dart';
+import '../controls/app_sub_label.dart';
 
 import '../project/dome_project.dart';
 import '../project/dome_project_item.dart';
@@ -27,6 +34,8 @@ import '../project/dome_project_comment.dart';
 
 const kCreateTodoItemScreenDescriptionFieldHeight = 120.0;
 const kCreateTodoItemScreenCommentFieldHeight = 80.0;
+
+const double kCreateTodoItemScreenCheckBoxSize = 44.0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +72,7 @@ class _CreateTodoItemScreenState extends State<CreateTodoItemScreen> {
         _processing = true;
       });
 
-      ServerProject.updateClientComments(item).then((v) {
+      item.updateClientComments(forceUpdate: true).then((v) {
         setState(() {
           _processing = false;
         });
@@ -87,13 +96,27 @@ class _CreateTodoItemScreenState extends State<CreateTodoItemScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              // const AppFormFieldSpacer(),
-              // _backButton(),
               const AppFormFieldSpacer(),
               AppPrimaryPrompt(
-                  prompt: _isCreateMode() ? 'create todo item' : 'todo',
-                  prevChild: _backButton(),
-                  nextChild: !(_isCreateMode()) ? _getPromptChild() : null),
+                prompt: _isCreateMode() ? 'create todo item' : 'todo',
+                prevChild: Row(
+                  children: [
+                    _getBackButton(),
+                    const SizedBox(width: 4.0),
+                    _getProjectGraphic(),
+                    const SizedBox(width: 4.0),
+                    Visibility(
+                      visible: !(_isCreateMode()),
+                      child: Row(
+                        children: [
+                          _getCompleteCheckBox(),
+                          const SizedBox(width: 4.0),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               _getNameField(),
               _getDescriptionField(widget.domeProject),
               Visibility(
@@ -164,7 +187,7 @@ class _CreateTodoItemScreenState extends State<CreateTodoItemScreen> {
               ),
               const AppFormFieldSpacer(spacerSize: 2),
               // TODO: may want these back after adding row to attach graphics
-              // _backButton(),
+              // _getBackButton(),
               // const AppFormFieldSpacer(spacerSize: 2),
             ],
           ),
@@ -195,30 +218,48 @@ class _CreateTodoItemScreenState extends State<CreateTodoItemScreen> {
     }
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const AppFormFieldSpacer(),
-        AppLabel(message: _itemName),
-        AppLabel(message: 'created by: ${(widget.item!.hasAuthor() ? widget.item!.getAuthor() : 'unknown')}'),
+        AppLabel(
+          message: _itemName,
+          scale: 1.4,
+          expand: true,
+        ),
+        AppSubLabel(message: 'TODO-${widget.item!.getServerId()}'),
+        AppSubLabel(message: widget.item!.getCreatedDateTimeLocalDescription()),
+        AppSubLabel(message: 'created by: ${(widget.item!.hasAuthor() ? widget.item!.getAuthor() : 'unknown')}'),
+        Visibility(
+          visible: widget.item!.isComplete(),
+          child: AppSubLabel(message: widget.item!.getCompleteDateTimeLocalDescription()),
+        ),
       ],
     );
   }
 
-  Widget _getPromptChild() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        AppLabel(
-          message: '[',
+  Widget _getCompleteCheckBox() {
+    if (_isCreateMode()) return Container();
+    return GestureDetector(
+      onTap: () async {
+        setState(() {
+          _processing = true;
+        });
+
+        await widget.item!.toggleComplete(updateServer: true);
+
+        setState(() {
+          _processing = false;
+        });
+      },
+      child: Container(
+        // padding: const EdgeInsets.only(left: 8.0, right: 10.0),
+        child: Icon(
+          widget.item!.isComplete() ? Icons.check_circle_outlined : Icons.radio_button_unchecked,
+          size: kCreateTodoItemScreenCheckBoxSize,
+          color: widget.item!.isComplete() ? kAppProjectCardCompleteColor : kAppProjectCardIncompleteColor,
         ),
-        AppTechLabel(
-          message: widget.item!.getServerId(),
-        ),
-        // const SizedBox(width: 2.0),
-        AppLabel(
-          message: ']',
-        ),
-      ],
+      ),
     );
   }
 
@@ -277,20 +318,20 @@ class _CreateTodoItemScreenState extends State<CreateTodoItemScreen> {
     );
   }
 
-  Widget _backButton() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        AppBarButton(
-          icon: Icons.arrow_back,
-          onPress: () {
-            FocusManager.instance.primaryFocus?.unfocus();
-            Navigator.of(context).pop();
-          },
-        ),
-        const SizedBox(width: 4.0),
-      ],
+  Widget _getBackButton() {
+    return AppBarButton(
+      icon: Icons.arrow_back,
+      onPress: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
+  Widget _getProjectGraphic() {
+    return AppBarButton(
+      fillImage: widget.domeProject.getGraphicImage(),
+      onPress: () {},
     );
   }
 
@@ -298,7 +339,34 @@ class _CreateTodoItemScreenState extends State<CreateTodoItemScreen> {
     if (widget.item != null) {
       return Column(
         children: [
-          for (DomeProjectComment domeProjectComment in widget.item!.getComments()) CommentCard(comment: domeProjectComment)
+          for (DomeProjectComment domeProjectComment in widget.item!.getComments())
+            CommentCard(
+              todoItem: widget.item!,
+              comment: domeProjectComment,
+              onDelete: () async {
+                AppDialogResult? result = await AppDialog.showChoiceDialog(
+                    context: context,
+                    icon: Icons.warning_amber_rounded,
+                    title: 'Delete Comment',
+                    content: 'Are you sure you want to delete this comment?',
+                    option1: 'Yes',
+                    option2: 'No');
+
+                if (result != null && result == AppDialogResult.option1) {
+                  Logger.print('user chose to delete the comment');
+
+                  setState(() {
+                    _processing = true;
+                  });
+
+                  await widget.item!.deleteComment(domeProjectComment: domeProjectComment, updateServer: true);
+
+                  setState(() {
+                    _processing = false;
+                  });
+                }
+              },
+            ),
         ],
       );
     }

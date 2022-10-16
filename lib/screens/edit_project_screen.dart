@@ -5,11 +5,17 @@ import 'dart:typed_data';
 
 import '../devtools/logger.dart';
 
+import '../server/server_project.dart';
+
 import '../project/dome_project.dart';
 
 import '../utilities/password_validator.dart';
 import '../utilities/screen_tools.dart';
 import '../utilities/image_tools.dart';
+
+import '../cards/shared_project_card.dart';
+
+import '../dialogs/app_dialog.dart';
 
 import '../controls/screen_frame.dart';
 import '../controls/app_primary_prompt.dart';
@@ -20,6 +26,8 @@ import '../controls/app_password_text_field.dart';
 import '../controls/app_button.dart';
 import '../controls/app_info_tag.dart';
 import '../controls/app_error_tag.dart';
+import '../controls/app_label.dart';
+import '../controls/app_int_field.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -36,8 +44,13 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
   String _name = '';
   String _password = '';
   String _imageFilePath = '';
+  int _detailsTotalLatestComments = 0;
+
+  int _graphicSizeBytes = 0;
 
   PasswordValidateType _passwordValidateType = PasswordValidateType.valid;
+
+  List<String> _shareToEmails = [];
 
   bool _processing = false;
 
@@ -50,7 +63,25 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     _password = widget.domeProject.getPassword();
     _passwordValidateType = PasswordValidator.validate(_password);
 
-    _processing = false;
+    _detailsTotalLatestComments = widget.domeProject.getDetailsTotalLatestComments();
+
+    MemoryImage? graphicImage = widget.domeProject.getGraphicImage();
+    if (graphicImage != null) {
+      _graphicSizeBytes = graphicImage.bytes.length;
+    } else {
+      _graphicSizeBytes = 0;
+    }
+
+    setState(() {
+      _processing = true;
+    });
+
+    ServerProject.getShareToEmails(widget.domeProject).then((shareToEmails) {
+      setState(() {
+        _shareToEmails = shareToEmails;
+        _processing = false;
+      });
+    });
   }
 
   @override
@@ -66,14 +97,31 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               const AppFormFieldSpacer(spacerSize: 2),
-              AppPrimaryPrompt(prompt: 'edit project'),
+              AppPrimaryPrompt(prompt: 'project settings'),
               const AppFormFieldSpacer(spacerSize: 2),
-              AppChooseGraphicButton(
-                prompt: 'choose graphic',
-                initialFillImage: widget.domeProject.getGraphicImage(),
-                onChanged: (String imageFilePath) {
-                  _imageFilePath = imageFilePath;
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  AppChooseGraphicButton(
+                    prompt: 'choose graphic',
+                    initialFillImage: widget.domeProject.getGraphicImage(),
+                    onChanged: (String imageFilePath, int sourceSizeBytes) {
+                      _imageFilePath = imageFilePath;
+                      _graphicSizeBytes = sourceSizeBytes;
+                    },
+                  ),
+                  const SizedBox(width: 12.0),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppLabel(message: 'Image Info'),
+                      AppLabel(
+                          message:
+                              '${(_graphicSizeBytes / 1024.0 / 1024.0).toStringAsFixed(1)} MB of ${(DomeProject.graphicMaxSizeBytes / 1024.0 / 1024.0).toStringAsFixed(1)} MB'),
+                    ],
+                  ),
+                ],
               ),
               const AppFormFieldSpacer(),
               AppTextField(
@@ -116,7 +164,60 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                   ],
                 ),
               ),
+              AppIntField(
+                prompt: 'Max Comments In Details',
+                initialValue: widget.domeProject.getDetailsTotalLatestComments(),
+                minValue: 0,
+                maxValue: DomeProject.maxDetailsTotalLatestComments,
+                onChanged: (int value) {
+                  _detailsTotalLatestComments = value;
+                },
+              ),
+              const AppFormFieldSpacer(),
+              AppLabel(message: 'owner: ${widget.domeProject.getOwner()}'),
+              Visibility(
+                visible: _shareToEmails.isNotEmpty,
+                child: Column(
+                  children: [
+                    const AppFormFieldSpacer(),
+                    AppLabel(message: 'This project is shared with:'),
+                    const AppFormFieldSpacer(spacerSize: 0.5),
+                    for (String shareToEmail in _shareToEmails)
+                      SharedProjectCard(
+                        domeProject: widget.domeProject,
+                        shareToEmail: shareToEmail,
+                        onDelete: () async {
+                          AppDialogResult? result = await AppDialog.showChoiceDialog(
+                              context: context,
+                              icon: Icons.warning_amber_rounded,
+                              title: 'Stop Sharing',
+                              content: 'Are you sure you want to stop sharing this project with \'$shareToEmail\'?',
+                              option1: 'Yes',
+                              option2: 'No');
+
+                          if (result != null && result == AppDialogResult.option1) {
+                            Logger.print('user chose to stop sharing project');
+
+                            setState(() {
+                              _processing = true;
+                            });
+
+                            await ServerProject.unshareProject(widget.domeProject, shareToEmail);
+                            List<String> shareToEmails = await ServerProject.getShareToEmails(widget.domeProject);
+
+                            setState(() {
+                              _shareToEmails = shareToEmails;
+                              _processing = false;
+                            });
+                          }
+                        },
+                      ),
+                    const AppFormFieldSpacer(spacerSize: 2.0),
+                  ],
+                ),
+              ),
               _appendAppButtons(widget.domeProject),
+              const AppFormFieldSpacer(),
             ],
           ),
         ),
@@ -142,6 +243,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
           password: _password,
           graphicBytes: graphicBytes,
           graphicPath: _imageFilePath,
+          detailsTotalLatestComments: _detailsTotalLatestComments,
         );
 
         if (await domeProject.updateContent(source: updateDomeProject, updateServer: true)) {
@@ -171,6 +273,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
     if (ScreenTools.isScreenNarrow(context)) {
       return Column(
         children: [
+          const AppFormFieldSpacer(spacerSize: 2.0),
           _updateButton(domeProject),
           const AppFormFieldSpacer(spacerSize: 0.5),
           _cancelButton(),

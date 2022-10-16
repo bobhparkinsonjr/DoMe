@@ -61,7 +61,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               const AppFormFieldSpacer(spacerSize: 2),
               AppChooseGraphicButton(
                 prompt: 'choose avatar',
-                onChanged: (String imageFilePath) {
+                onChanged: (String imageFilePath, int sourceSizeBytes) {
                   _imageFilePath = imageFilePath;
                 },
               ),

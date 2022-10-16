@@ -4,10 +4,11 @@ import '../settings/app_colors.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-const TextStyle kAppTechLabelTextStyle = TextStyle(
-  fontSize: 18.0,
+const TextStyle kAppSubLabelTextStyle = TextStyle(
+  fontSize: 16.0,
   fontStyle: FontStyle.italic,
-  color: kAppTechLabelTextColor,
+  color: kAppSubLabelTextColor,
+  height: 1.4,
   shadows: [
     Shadow(
       blurRadius: 2.0,
@@ -19,18 +20,18 @@ const TextStyle kAppTechLabelTextStyle = TextStyle(
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum AppTechLabelAlign {
+enum AppSubLabelAlign {
   left,
   center,
   right,
 }
 
-class AppTechLabel extends StatelessWidget {
+class AppSubLabel extends StatelessWidget {
   final String message;
   final bool visible;
-  final AppTechLabelAlign labelAlign;
+  final AppSubLabelAlign labelAlign;
 
-  const AppTechLabel({Key? key, required this.message, this.visible = true, this.labelAlign = AppTechLabelAlign.left})
+  const AppSubLabel({Key? key, required this.message, this.visible = true, this.labelAlign = AppSubLabelAlign.left})
       : super(key: key);
 
   @override
@@ -40,9 +41,9 @@ class AppTechLabel extends StatelessWidget {
       child: Row(
         mainAxisAlignment: _getAlignment(),
         children: [
-          Text(
+          SelectableText(
             message,
-            style: kAppTechLabelTextStyle,
+            style: kAppSubLabelTextStyle,
           ),
         ],
       ),
@@ -51,13 +52,13 @@ class AppTechLabel extends StatelessWidget {
 
   MainAxisAlignment _getAlignment() {
     switch (labelAlign) {
-      case AppTechLabelAlign.left:
+      case AppSubLabelAlign.left:
         return MainAxisAlignment.start;
 
-      case AppTechLabelAlign.center:
+      case AppSubLabelAlign.center:
         return MainAxisAlignment.center;
 
-      case AppTechLabelAlign.right:
+      case AppSubLabelAlign.right:
         return MainAxisAlignment.end;
 
       default:

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../utilities/settings_manager.dart';
+import '../utilities/timestamp_tools.dart';
 
 import 'login_user_screen.dart';
 
@@ -22,6 +23,7 @@ class _StartupScreenState extends State<StartupScreen> {
 
     Firebase.initializeApp().then((v) {
       SettingsManager.setup().then((v) {
+        TimestampTools.unitTest();
         Navigator.pushAndRemoveUntil(
             context, MaterialPageRoute(builder: (context) => LoginUserScreen()), (Route<dynamic> route) => false);
       });
