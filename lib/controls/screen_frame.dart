@@ -33,7 +33,7 @@ class ScreenFrame extends StatefulWidget {
 
 class _ScreenFrameState extends State<ScreenFrame> {
   static const int tileBackdropTotalColumns = 4;
-  static const int tileBackdropTotalRows = 2;
+  static const int tileBackdropTotalRows = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +181,7 @@ class _ScreenFrameState extends State<ScreenFrame> {
   }
   */
 
-  Widget _getTileRow() {
+  Widget _getTileRow({int flex = 1}) {
     List<Widget> row = [];
     int c0 = 1;
     int c1 = tileBackdropTotalColumns - 2;
@@ -195,6 +195,7 @@ class _ScreenFrameState extends State<ScreenFrame> {
     }
 
     return Expanded(
+      flex: flex,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.max,
@@ -211,7 +212,7 @@ class _ScreenFrameState extends State<ScreenFrame> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.max,
         children: [
-          for (int i = 0; i < tileBackdropTotalRows; ++i) _getTileRow(),
+          for (int i = 0; i < tileBackdropTotalRows; ++i) _getTileRow(flex: (i == 1) ? 1 : 2),
         ],
       ),
     );

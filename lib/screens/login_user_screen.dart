@@ -18,6 +18,7 @@ import '../dialogs/app_dialog.dart';
 
 import 'create_account_screen.dart';
 import 'open_project_screen.dart';
+import 'reset_password_screen.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -130,6 +131,46 @@ class _LoginUserScreenState extends State<LoginUserScreen> {
                     Navigator.of(context).push(MaterialPageRoute(builder: (context) => OpenProjectScreen()));
                 },
               ),
+              const AppFormFieldSpacer(spacerSize: 0.5),
+              AppLink(
+                linkName: 'I forgot my password',
+                tooltip: 'This will send you an email with instructions on how to reset your password.',
+                onPressed: () async {
+                  if (_email.isEmpty) {
+                    await AppDialog.showChoiceDialog(
+                      context: context,
+                      icon: Icons.error_outline_rounded,
+                      title: 'Reset Password',
+                      content: 'Please enter an email address before trying to reset your password.',
+                      option1: 'Ok',
+                    );
+
+                    return;
+                  }
+
+                  if (await ServerAuth.resetPassword(_email)) {
+                    // KEEP: will need this if we switch to having a code sent in the email
+                    // await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ResetPasswordScreen()));
+
+                    await AppDialog.showChoiceDialog(
+                      context: context,
+                      // icon: Icons.error_outline_rounded,
+                      title: 'Reset Password',
+                      content: 'Check your email for instructions on how to reset your password.',
+                      option1: 'Ok',
+                    );
+                  } else {
+                    await AppDialog.showChoiceDialog(
+                      context: context,
+                      icon: Icons.error_outline_rounded,
+                      title: 'Reset Password Failed',
+                      content: 'Failed to reset password.  Please try again later.',
+                      option1: 'Ok',
+                    );
+                  }
+                },
+              ),
+              const AppFormFieldSpacer(),
             ],
           ),
         ),

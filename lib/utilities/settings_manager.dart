@@ -18,6 +18,9 @@ class SettingsManager {
   // maps a project identifier -> project password
   static Map<String, String> _projectPasswordsCache = {};
 
+  // maps a graphic path to a last checked DateTime stamp
+  static Map<String, String> _graphicCache = {};
+
   // 0.0=>won't see the background image
   // 1.0=>the background image unmodified
   static const double _defaultScreenBackgroundImageOpacity = 0.8;
@@ -42,6 +45,7 @@ class SettingsManager {
     return '$_settingsFolder/$_kSettingsFileName';
   }
 
+  /// always ends in a separator
   static String getFolder() {
     return '$_settingsFolder/';
   }
@@ -54,6 +58,7 @@ class SettingsManager {
     return {
       '_lastUser': _lastUser,
       '_projectPasswordsCache': _projectPasswordsCache,
+      '_graphicCache': _graphicCache,
       '_screenBackgroundImageOpacity': _screenBackgroundImageOpacity,
       '_formScreenBackgroundImageOpacity': _formScreenBackgroundImageOpacity,
     };
@@ -62,6 +67,7 @@ class SettingsManager {
   static void fromJson(dynamic jsonObject) {
     _lastUser = jsonObject['_lastUser'];
     _projectPasswordsCache = Map.castFrom(jsonObject['_projectPasswordsCache']);
+    _graphicCache = Map.castFrom(jsonObject['_graphicCache']);
     _screenBackgroundImageOpacity = jsonObject.containsKey('_screenBackgroundImageOpacity')
         ? jsonObject['_screenBackgroundImageOpacity']
         : _defaultScreenBackgroundImageOpacity;
@@ -127,6 +133,24 @@ class SettingsManager {
     try {
       if (_projectPasswordsCache.containsKey(projectId)) {
         return AppEncryptor.decryptString(_projectPasswordsCache[projectId]!);
+      }
+    } catch (e) {
+      // empty
+    }
+
+    return null;
+  }
+
+  static void storeGraphicUpdateTime(String graphicPath, DateTime updateTime) {
+    if (graphicPath.isNotEmpty) _graphicCache[graphicPath] = updateTime.toString();
+  }
+
+  static DateTime? getGraphicUpdateTime(String graphicPath) {
+    if (graphicPath.isEmpty) return null;
+
+    try {
+      if (_graphicCache.containsKey(graphicPath)) {
+        return DateTime.parse(_graphicCache[graphicPath]!);
       }
     } catch (e) {
       // empty

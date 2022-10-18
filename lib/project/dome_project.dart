@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import '../devtools/logger.dart';
 
 import '../utilities/settings_manager.dart';
+import '../utilities/image_tools.dart';
 
 import '../server/server_auth.dart';
 import '../server/server_project.dart';
@@ -425,7 +426,39 @@ class DomeProject extends ChangeNotifier {
   Future<bool> updateGraphicImage({bool forceUpdate = false}) async {
     if (!forceUpdate && _graphicBytes.isNotEmpty) return true;
     if (_graphicPath.isEmpty) return false;
+
+    DateTime? graphicUpdateTime = SettingsManager.getGraphicUpdateTime(_graphicPath);
+
+    if (graphicUpdateTime != null &&
+        (DateTime.now().toUtc().difference(graphicUpdateTime).inMilliseconds) < (1000 * 60 * 60 * 1)) {
+      Uint8List? graphicBytes = await ImageTools.getCachedImageBytes(_graphicPath);
+      if (graphicBytes != null && graphicBytes.isNotEmpty) {
+        Logger.print('using graphic from cache | path: \'$_graphicPath\'');
+        _graphicBytes = graphicBytes;
+        return true;
+      }
+    }
+
+    Logger.print('checking server for graphic \'$_graphicPath\'');
     _graphicBytes = await ServerProject.getProjectGraphicImageBytes(_graphicPath);
+
+    if (_graphicBytes.isNotEmpty) ImageTools.cacheImageBytes(_graphicPath, _graphicBytes);
+
+    DateTime dt = DateTime.now().toUtc();
+
+    SettingsManager.storeGraphicUpdateTime(_graphicPath, dt);
+    await SettingsManager.save();
+
+    /*
+    DateTime? dt2 = SettingsManager.getGraphicUpdateTime(_graphicPath);
+    if (dt2 == null || dt2 != dt) {
+      Logger.print(
+          'failed to store/fetch graphic update time | dt: ${dt.toString()} | dt2: ${(dt2 == null ? 'null' : dt2.toString())}');
+    } else {
+      Logger.print('store/fetch graphic update time succeeded | dt: ${dt.toString()} | dt2: ${dt2.toString()}');
+    }
+    */
+
     return _graphicBytes.isNotEmpty;
   }
 

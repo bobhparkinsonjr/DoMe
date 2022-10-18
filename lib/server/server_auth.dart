@@ -119,6 +119,31 @@ class ServerAuth {
     }
   }
 
+  /// begins the password reset process, if this returns true then
+  /// need to prompt user for code and new password and then call
+  /// confirmResetPassword defined below
+  static Future<bool> resetPassword(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      return true;
+    } catch (e) {
+      // empty
+    }
+
+    return false;
+  }
+
+  static Future<bool> confirmResetPassword(String code, String newPassword) async {
+    try {
+      await FirebaseAuth.instance.confirmPasswordReset(code: code, newPassword: newPassword);
+      return true;
+    } catch (e) {
+      // empty
+    }
+
+    return false;
+  }
+
   static Future<bool> createAccount(String email, String password, String avatarFilePath) async {
     try {
       UserCredential uc = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);

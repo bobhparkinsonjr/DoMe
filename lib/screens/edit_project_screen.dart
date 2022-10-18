@@ -175,11 +175,11 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
               ),
               const AppFormFieldSpacer(),
               AppLabel(message: 'owner: ${widget.domeProject.getOwner()}'),
+              const AppFormFieldSpacer(),
               Visibility(
                 visible: _shareToEmails.isNotEmpty,
                 child: Column(
                   children: [
-                    const AppFormFieldSpacer(),
                     AppLabel(message: 'This project is shared with:'),
                     const AppFormFieldSpacer(spacerSize: 0.5),
                     for (String shareToEmail in _shareToEmails)

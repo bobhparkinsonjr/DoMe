@@ -313,7 +313,10 @@ class _CreateTodoItemScreenState extends State<CreateTodoItemScreen> {
     return Column(
       children: [
         const AppFormFieldSpacer(),
-        AppLabel(message: _itemDescription),
+        AppLabel(
+          message: _itemDescription,
+          expand: true,
+        ),
       ],
     );
   }

@@ -1,41 +1,36 @@
 import 'package:flutter/material.dart';
 
-import '../devtools/logger.dart';
-
-import '../utilities/email_validator.dart';
 import '../utilities/password_validator.dart';
-import '../utilities/screen_tools.dart';
 
 import '../server/server_auth.dart';
 
-import '../controls/screen_frame.dart';
+import '../dialogs/app_dialog.dart';
+
 import '../controls/app_form_field_spacer.dart';
 import '../controls/app_primary_prompt.dart';
-import '../controls/app_choose_graphic_button.dart';
+import '../controls/app_text_field.dart';
 import '../controls/app_button.dart';
-import '../controls/app_link.dart';
-import '../controls/app_error_tag.dart';
-import '../controls/app_email_text_field.dart';
 import '../controls/app_password_text_field.dart';
-
-import '../dialogs/app_dialog.dart';
+import '../controls/screen_frame.dart';
+import '../controls/app_error_tag.dart';
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CreateAccountScreen extends StatefulWidget {
-  const CreateAccountScreen({Key? key}) : super(key: key);
+class ResetPasswordScreen extends StatefulWidget {
+  const ResetPasswordScreen({Key? key}) : super(key: key);
 
   @override
-  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _CreateAccountScreenState extends State<CreateAccountScreen> {
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _processing = false;
-  String _email = '';
-  String _password = '';
-  String _imageFilePath = '';
 
-  EmailValidateType emailValidateType = EmailValidateType.invalidEmpty;
+  String _code = '';
+
+  String _password = '';
+  String _confirmPassword = '';
+
   PasswordValidateType passwordValidateType = PasswordValidateType.invalidEmpty;
 
   @override
@@ -57,29 +52,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               const AppFormFieldSpacer(spacerSize: 2),
-              const AppPrimaryPrompt(prompt: 'please provide the following information to create a new account'),
+              const AppPrimaryPrompt(prompt: 'reset password'),
               const AppFormFieldSpacer(spacerSize: 2),
-              AppChooseGraphicButton(
-                prompt: 'choose avatar',
-                onChanged: (String imageFilePath, int sourceSizeBytes) {
-                  _imageFilePath = imageFilePath;
-                },
-              ),
-              const AppFormFieldSpacer(),
-              AppEmailTextField(
-                hintText: 'email address',
-                focus: false,
+              AppTextField(
+                hintText: 'code from email',
                 onChanged: (value) {
-                  _email = value;
-                  setState(() {
-                    emailValidateType = EmailValidator.validate(_email);
-                  });
+                  _code = value;
                 },
               ),
-              const AppFormFieldSpacer(),
+              const AppFormFieldSpacer(spacerSize: 2.0),
               AppPasswordTextField(
                 hintText: 'password',
-                focus: false,
                 obscureText: true,
                 onChanged: (value) {
                   _password = value;
@@ -95,41 +78,70 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     passwordValidateType != PasswordValidateType.invalidEmpty,
               ),
               const AppFormFieldSpacer(),
+              AppPasswordTextField(
+                hintText: 'confirm password',
+                obscureText: true,
+                onChanged: (value) {
+                  _confirmPassword = value;
+                },
+              ),
+              const AppFormFieldSpacer(),
               AppButton(
-                title: 'Create Account',
+                title: 'Reset Password',
                 enabled: _isFormValid(),
                 onPress: () async {
+                  if (_password != _confirmPassword) {
+                    await AppDialog.showChoiceDialog(
+                      context: context,
+                      icon: Icons.error_outline_rounded,
+                      title: 'Password Mismatch',
+                      content: 'The passwords entered here must match.',
+                      option1: 'Ok',
+                    );
+
+                    return;
+                  }
+
                   setState(() {
                     _processing = true;
                   });
 
-                  if (await ServerAuth.createAccount(_email, _password, _imageFilePath)) {
+                  bool confirmResult = await ServerAuth.confirmResetPassword(_code, _password);
+
+                  setState(() {
+                    _processing = false;
+                  });
+
+                  if (confirmResult) {
+                    await AppDialog.showChoiceDialog(
+                      context: context,
+                      // icon: Icons.info_outline_rounded,
+                      title: 'Password Reset',
+                      content: 'Your password has been reset.  Please login to continue.',
+                      option1: 'Ok',
+                    );
+
                     FocusManager.instance.primaryFocus?.unfocus();
                     Navigator.of(context).pop();
                   } else {
-                    setState(() {
-                      _processing = false;
-                    });
-
                     await AppDialog.showChoiceDialog(
                       context: context,
                       icon: Icons.error_outline_rounded,
-                      title: 'Create Account Failed',
-                      content: 'Failed to create the account.  Please try again later.',
+                      title: 'Password Reset Failed',
+                      content: 'Failed to reset the password.  Please try again later.',
                       option1: 'Ok',
                     );
                   }
                 },
               ),
-              const AppFormFieldSpacer(),
-              AppLink(
-                linkName: 'I already have an account',
-                tooltip: 'This will take you to the login screen.',
-                onPressed: () {
+              AppButton(
+                title: 'Cancel',
+                onPress: () {
                   FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.of(context).pop();
                 },
               ),
+              const AppFormFieldSpacer(),
             ],
           ),
         ),
@@ -138,6 +150,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   bool _isFormValid() {
-    return (emailValidateType == EmailValidateType.valid && passwordValidateType == PasswordValidateType.valid);
+    return (_code.isNotEmpty && passwordValidateType == PasswordValidateType.valid);
   }
 }

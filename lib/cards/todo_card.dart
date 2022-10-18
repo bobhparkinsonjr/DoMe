@@ -46,12 +46,12 @@ const TextStyle kTodoCardDateTimeStyle = TextStyle(
 );
 
 const TextStyle kTodoCardDescriptionStyle = TextStyle(
-  fontSize: 16.0,
+  fontSize: 18.0,
   color: kAppProjectCardSecondaryColor,
 );
 
 const TextStyle kTodoCardCommentStyle = TextStyle(
-  fontSize: 16.0,
+  fontSize: 18.0,
   fontStyle: FontStyle.italic,
   color: kAppProjectCardThirdColor,
 );
@@ -168,10 +168,15 @@ class _TodoCardState extends State<TodoCard> {
                               ),
                               Visibility(
                                 visible: todoItem.getDescription().isNotEmpty,
-                                child: Text(
-                                  todoItem.getDescription(),
-                                  textAlign: TextAlign.start,
-                                  style: kTodoCardDescriptionStyle,
+                                child: Column(
+                                  children: [
+                                    const SizedBox(height: 4.0),
+                                    Text(
+                                      todoItem.getDescription(),
+                                      textAlign: TextAlign.start,
+                                      style: kTodoCardDescriptionStyle,
+                                    ),
+                                  ],
                                 ),
                               ),
                               Visibility(
@@ -274,8 +279,11 @@ class _TodoCardState extends State<TodoCard> {
 
     List<DomeProjectComment> comments = todoItem.getComments();
 
+    if (comments.length <= 0) return Container();
+
     return Column(
       children: [
+        const SizedBox(height: 4.0),
         for (int i = 0; i < comments.length && i < maxComments; ++i)
           Text(
             comments[i].getCommentMessage(),
