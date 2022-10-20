@@ -38,6 +38,9 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
   MemoryImage? _avatar;
   MemoryImage? _background;
 
+  int _avatarSizeBytes = 0;
+  int _backgroundSizeBytes = 0;
+
   double _backgroundFormImageOpacity = 1.0;
   double _backgroundImageOpacity = 1.0;
 
@@ -53,6 +56,14 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
 
     _avatar = ServerAuth.getCurrentUserAvatar();
     _background = ServerAuth.getCurrentUserBackground();
+
+    if (_avatar != null) {
+      _avatarSizeBytes = _avatar!.bytes.length;
+    }
+
+    if (_background != null) {
+      _backgroundSizeBytes = _background!.bytes.length;
+    }
 
     _backgroundFormImageOpacity = SettingsManager.getFormScreenBackgroundImageOpacity();
     _backgroundImageOpacity = SettingsManager.getScreenBackgroundImageOpacity();
@@ -90,9 +101,17 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                     children: [
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: AppLabel(
-                          message: 'Avatar',
-                          labelAlign: AppLabelAlign.left,
+                        child: Column(
+                          children: [
+                            AppLabel(
+                              message: 'Avatar',
+                              labelAlign: AppLabelAlign.left,
+                            ),
+                            AppLabel(
+                              message:
+                                  '${(_avatarSizeBytes / 1024.0 / 1024.0).toStringAsFixed(1)} MB of ${(ServerAuth.graphicMaxSizeBytes / 1024.0 / 1024.0).toStringAsFixed(1)} MB',
+                            ),
+                          ],
                         ),
                       ),
                       TableCell(
@@ -101,6 +120,10 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                           initialFillImage: _avatar,
                           onChanged: (String imageFilePath, int sourceSizeBytes) {
                             _avatarFilePath = imageFilePath;
+
+                            setState(() {
+                              _avatarSizeBytes = sourceSizeBytes;
+                            });
                           },
                         ),
                       ),
@@ -116,9 +139,17 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                     children: [
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: AppLabel(
-                          message: 'Background',
-                          labelAlign: AppLabelAlign.left,
+                        child: Column(
+                          children: [
+                            AppLabel(
+                              message: 'Background',
+                              labelAlign: AppLabelAlign.left,
+                            ),
+                            AppLabel(
+                              message:
+                                  '${(_backgroundSizeBytes / 1024.0 / 1024.0).toStringAsFixed(1)} MB of ${(ServerAuth.graphicMaxSizeBytes / 1024.0 / 1024.0).toStringAsFixed(1)} MB',
+                            ),
+                          ],
                         ),
                       ),
                       TableCell(
@@ -127,6 +158,10 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                           initialFillImage: _background,
                           onChanged: (String imageFilePath, int sourceSizeBytes) {
                             _backgroundFilePath = imageFilePath;
+
+                            setState(() {
+                              _backgroundSizeBytes = sourceSizeBytes;
+                            });
                           },
                         ),
                       ),

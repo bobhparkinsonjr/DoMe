@@ -14,11 +14,11 @@ import '../controls/screen_frame.dart';
 import '../controls/app_primary_prompt.dart';
 import '../controls/app_choose_graphic_button.dart';
 import '../controls/app_button.dart';
-// import '../controls/app_radio_button.dart';
 import '../controls/app_error_tag.dart';
 import '../controls/app_text_field.dart';
 import '../controls/app_password_text_field.dart';
 import '../controls/app_form_field_spacer.dart';
+import '../controls/app_label.dart';
 
 import '../dialogs/app_dialog.dart';
 
@@ -40,6 +40,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
   PasswordValidateType _passwordValidateType = PasswordValidateType.invalidEmpty;
 
+  int _graphicSizeBytes = 0;
+
   @override
   Widget build(BuildContext context) {
     return ScreenFrame(
@@ -55,11 +57,31 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               const AppFormFieldSpacer(spacerSize: 2),
               const AppPrimaryPrompt(prompt: 'create a new project'),
               const AppFormFieldSpacer(spacerSize: 2),
-              AppChooseGraphicButton(
-                prompt: 'choose graphic',
-                onChanged: (String imageFilePath, int sourceSizeBytes) {
-                  _imageFilePath = imageFilePath;
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  AppChooseGraphicButton(
+                    prompt: 'choose graphic',
+                    onChanged: (String imageFilePath, int sourceSizeBytes) {
+                      _imageFilePath = imageFilePath;
+
+                      setState(() {
+                        _graphicSizeBytes = sourceSizeBytes;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 12.0),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppLabel(message: 'Image Info'),
+                      AppLabel(
+                          message:
+                              '${(_graphicSizeBytes / 1024.0 / 1024.0).toStringAsFixed(1)} MB of ${(DomeProject.graphicMaxSizeBytes / 1024.0 / 1024.0).toStringAsFixed(1)} MB'),
+                    ],
+                  ),
+                ],
               ),
               const AppFormFieldSpacer(),
               AppTextField(

@@ -108,7 +108,10 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                     initialFillImage: widget.domeProject.getGraphicImage(),
                     onChanged: (String imageFilePath, int sourceSizeBytes) {
                       _imageFilePath = imageFilePath;
-                      _graphicSizeBytes = sourceSizeBytes;
+
+                      setState(() {
+                        _graphicSizeBytes = sourceSizeBytes;
+                      });
                     },
                   ),
                   const SizedBox(width: 12.0),

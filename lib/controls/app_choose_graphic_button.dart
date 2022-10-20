@@ -92,11 +92,13 @@ class _AppChooseGraphicButtonState extends State<AppChooseGraphicButton> {
                   FilePickerResult? result = await FilePicker.platform.pickFiles();
 
                   if (result != null) {
-                    File source = File(_imageFilePath);
+                    String fullPath = result.files.single.path!;
+
+                    File source = File(fullPath);
                     int sourceSizeBytes = await source.length();
 
                     setState(() {
-                      _imageFilePath = result.files.single.path!;
+                      _imageFilePath = fullPath;
                       Logger.print('image file path chosen: \'$_imageFilePath\'');
                       widget.onChanged(_imageFilePath, sourceSizeBytes);
                     });
