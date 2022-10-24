@@ -15,18 +15,31 @@ import 'app_bar_button.dart';
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const TextStyle kOpenProjectHeaderTextStyle = TextStyle(
-  fontSize: 18.0, // 14.0,
-  color: kAppBarLabelTextColor,
+  fontSize: 28.0, // 14.0,
+  color: kAppLabelPrimaryColor,
   height: 1.0,
   fontWeight: FontWeight.w900,
+  shadows: [
+    Shadow(
+      blurRadius: 2.0,
+      color: Color(0xC0000000),
+      offset: Offset(2.0, 2.0),
+    ),
+  ],
 );
 
 const TextStyle kOpenProjectHeaderSubTextStyle = TextStyle(
-  fontSize: 16.0, // 14.0,
-  color: kAppBarLabelTextColor,
-  height: 1.1,
-  // fontWeight: FontWeight.w900,
+  fontSize: 20.0, // 14.0,
+  color: kAppLabelSecondaryColor,
   fontStyle: FontStyle.italic,
+  fontWeight: FontWeight.bold,
+  shadows: [
+    Shadow(
+      blurRadius: 1.0,
+      color: Color(0xC0000000),
+      offset: Offset(1.0, 1.0),
+    ),
+  ],
 );
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,17 +112,52 @@ class _OpenProjectHeaderBarState extends State<OpenProjectHeaderBar> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        /*
+                        AppBarButton(
+                          onPress: () {},
+                          fillImage: AssetImage('assets/dome_ice_icon.png'),
+                          scale: 2.0,
+                        ),
+                        */
+                        Container(
+                          width: 100.0,
+                          height: 100.0,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage('assets/dome_ice_icon.png'),
+                              fit: BoxFit.cover,
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    height: OpenProjectHeaderBar._barFullHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
                         const SizedBox(width: 2.0),
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            const SizedBox(height: 14.0),
                             Text(
-                              'Open Project',
+                              'DoMe',
                               textAlign: TextAlign.center,
                               style: kOpenProjectHeaderTextStyle,
                             ),
-                            const SizedBox(height: 2.0),
+                            /*
+                            Text(
+                              '1.0.0.0',
+                              textAlign: TextAlign.center,
+                              style: kOpenProjectHeaderSubTextStyle,
+                            ),
+                            */
+                            // const SizedBox(height: 2.0),
                           ],
                         )
                       ],
