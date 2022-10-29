@@ -51,7 +51,10 @@ class AppDialog {
         return AlertDialog(
           icon: (icon != null) ? Icon(icon, size: kAppDialogIconSize, color: kAppErrorTextColor) : null,
           backgroundColor: kAppDialogBackgroundColor,
-          title: Text(title.toUpperCase()),
+          title: Text(
+            title.toUpperCase(),
+            textAlign: TextAlign.center,
+          ),
           titleTextStyle: kAppDialogTitleTextStyle,
           content: SingleChildScrollView(
             child: Text(

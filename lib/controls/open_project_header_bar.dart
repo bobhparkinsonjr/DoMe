@@ -3,11 +3,15 @@ import 'package:provider/provider.dart';
 
 import '../settings/app_colors.dart';
 
+import '../utilities/app_info.dart';
+
 import '../project/dome_project_list.dart';
 
 import '../server/server_auth.dart';
 
 import '../screens/edit_account_screen.dart';
+
+import '../dialogs/app_dialog.dart';
 
 import 'clip_bottom_center_rect_shape.dart';
 import 'app_bar_button.dart';
@@ -112,21 +116,31 @@ class _OpenProjectHeaderBarState extends State<OpenProjectHeaderBar> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        /*
-                        AppBarButton(
-                          onPress: () {},
-                          fillImage: AssetImage('assets/dome_ice_icon.png'),
-                          scale: 2.0,
-                        ),
-                        */
-                        Container(
-                          width: 100.0,
-                          height: 100.0,
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage('assets/dome_ice_icon.png'),
-                              fit: BoxFit.cover,
-                              alignment: Alignment.center,
+                        GestureDetector(
+                          onTap: () async {
+                            String version = AppInfo.getDisplayVersion();
+                            String buildDate = AppInfo.getBuildDate();
+
+                            AppDialogResult? result = await AppDialog.showChoiceDialog(
+                              context: context,
+                              // icon: Icons.warning_amber_rounded,
+                              title: 'DoMe',
+                              content: '\ntrack the things you have to do\n'
+                                  '\n\nversion $version'
+                                  '\nbuild date $buildDate'
+                                  '\n\nCopyright 2022 Bob H. Parkinson Jr.',
+                              option1: 'OK',
+                            );
+                          },
+                          child: Container(
+                            width: 100.0,
+                            height: 100.0,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: AssetImage('assets/dome_checker_icon.png'),
+                                fit: BoxFit.cover,
+                                alignment: Alignment.center,
+                              ),
                             ),
                           ),
                         ),
