@@ -7,7 +7,7 @@ class AppInfo {
   static String _packageName = '';
   static String _version = '';
   static String _buildNumber = '';
-  static String _buildDate = 'Oct 28, 2022';
+  static String _buildDate = 'Dec 3, 2022';
 
   static Future<void> setup() async {
     if (_appName.isEmpty) {

@@ -13,7 +13,7 @@ import 'dome_project_comment.dart';
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 class DomeProjectTodoItem extends DomeProjectItem {
-  static const int descriptionMaxLength = 512;
+  static const int descriptionMaxLength = 2048;
 
   String _description = '';
   bool _complete = false;

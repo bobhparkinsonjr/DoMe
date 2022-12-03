@@ -4,6 +4,8 @@ import '../settings/app_colors.dart';
 
 import '../utilities/password_validator.dart';
 
+import 'app_bar_button.dart';
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef AppPasswordOnChangedCallback = void Function(String value);
@@ -54,24 +56,41 @@ class AppPasswordTextField extends StatefulWidget {
 
 class _AppPasswordTextFieldState extends State<AppPasswordTextField> {
   late TextEditingController _controller;
+  late bool _obscureText;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialValue);
+    _obscureText = widget.obscureText;
   }
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      obscureText: widget.obscureText,
-      textAlign: TextAlign.left,
-      onChanged: widget.onChanged,
-      style: kAppPasswordTextStyle,
-      autofocus: widget.focus,
-      maxLength: PasswordValidator.passwordMaxLength,
-      decoration: kAppPasswordInputDecoration.copyWith(hintText: widget.hintText),
+    return Row(
+      children: [
+        Flexible(
+          child: TextField(
+            controller: _controller,
+            obscureText: _obscureText,
+            textAlign: TextAlign.left,
+            onChanged: widget.onChanged,
+            style: kAppPasswordTextStyle,
+            autofocus: widget.focus,
+            maxLength: PasswordValidator.passwordMaxLength,
+            decoration: kAppPasswordInputDecoration.copyWith(hintText: widget.hintText),
+          ),
+        ),
+        const SizedBox(width: 4.0),
+        AppBarButton(
+          icon: _obscureText ? Icons.remove_red_eye : Icons.remove_red_eye_outlined,
+          onPress: () {
+            setState(() {
+              _obscureText = !_obscureText;
+            });
+          },
+        ),
+      ],
     );
   }
 }

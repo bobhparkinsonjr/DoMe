@@ -61,7 +61,7 @@ class AppLabel extends StatelessWidget {
   }
 
   Widget _getText() {
-    return Text(
+    return SelectableText(
       message,
       style: kAppLabelTextStyle.copyWith(fontSize: kAppLabelFontSize * scale),
     );

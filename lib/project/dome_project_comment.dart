@@ -10,7 +10,7 @@ import '../utilities/timestamp_tools.dart';
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 class DomeProjectComment extends ChangeNotifier {
-  static const int messageMaxLength = 512;
+  static const int messageMaxLength = 1024;
 
   String _commentMessage = '';
   DateTime _createDateTimeUTC = DateTime.now().toUtc();
